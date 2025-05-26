@@ -170,14 +170,14 @@ class TodoNotifier extends StateNotifier<AsyncValue<List<Todo>>> {
     
     try {
       // Only proceed if the date actually changed
-      if (todo != null && dueDate != todo.dueDate) {
+      if (todo != null && dueDate != null) {
         // Update the due date
         todo.dueDate = dueDate;
         // Cancel any existing notification for the old due date
         await LocalNotifications.cancelNotification(id);
 
         // Schedule a new notification if the new date is in the future
-        if (dueDate != null && dueDate.isAfter(DateTime.now())) {
+        if (dueDate.isAfter(DateTime.now())) {
           await LocalNotifications.scheduleNotification(
             id: id, body: todo.title, scheduledDate: dueDate,
           );
