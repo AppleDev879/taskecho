@@ -99,7 +99,10 @@ class _RecordingSheetState extends ConsumerState<RecordingSheet> with SingleTick
   @override
   void dispose() {
     _controller.dispose();
-    _recorderService.dispose();
+    // Ensure we don't block the UI while disposing
+    _recorderService.dispose().catchError((e) {
+      debugPrint('Error disposing recorder: $e');
+    });
     super.dispose();
   }
 
@@ -109,13 +112,14 @@ class _RecordingSheetState extends ConsumerState<RecordingSheet> with SingleTick
       _errorMessage = null;
     });
 
+    // Use a local client that we can close
+    final client = http.Client();
     try {
-      final todoParser = TodoParserService(
-        client: http.Client(),
-      );
-      
+      final todoParser = TodoParserService(client: client);
       final todoItems = await todoParser.parseAudio(audioFile);
 
+      if (!mounted) return;
+      
       setState(() {
         _uploadStatus = UploadStatus.success;
       });
@@ -131,10 +135,23 @@ class _RecordingSheetState extends ConsumerState<RecordingSheet> with SingleTick
       // Close the sheet automatically after success
       if (mounted) Navigator.of(context).pop(todoItems);
     } catch (e) {
-      setState(() {
-        _uploadStatus = UploadStatus.error;
-        _errorMessage = e.toString();
-      });
+      if (mounted) {
+        setState(() {
+          _uploadStatus = UploadStatus.error;
+          _errorMessage = e.toString();
+        });
+      }
+      rethrow;
+    } finally {
+      // Always clean up resources
+      client.close();
+      try {
+        if (await audioFile.exists()) {
+          await audioFile.delete();
+        }
+      } catch (e) {
+        debugPrint('Error deleting temp audio file: $e');
+      }
     }
   }
 

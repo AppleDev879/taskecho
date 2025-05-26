@@ -72,36 +72,67 @@ class TodoNotifier extends StateNotifier<AsyncValue<List<Todo>>> {
       todo.isDone = !todo.isDone;
       await isar!.todos.put(todo);
     });
+    LocalNotifications.cancelNotification(todo.id);
     await loadTodos();
   }
 
   Future<void> updateTodo(Todo updated) async {
     if (isar == null) return;
-    final oldDate = updated.dueDate;
+    
+    final oldTodo = state.valueOrNull?.firstWhere(
+      (t) => t.id == updated.id,
+      orElse: () => throw StateError('Todo not found'),
+    );
 
-    // Only proceed if the date actually changed
-    if (updated.dueDate != oldDate) {
-      // Update the model
-      updated.dueDate = updated.dueDate;
+    try {
+      // Only proceed if the date actually changed
+      if (updated.dueDate != oldTodo?.dueDate) {
+        // Cancel any existing notification
+        await LocalNotifications.cancelNotification(updated.id);
 
-      // Cancel any existing notification
-      LocalNotifications.cancelNotification(updated.id);
-
-      // Schedule a new notification if the date is not null
-      if (updated.dueDate != null && updated.dueDate!.isAfter(DateTime.now())) {
-        LocalNotifications.scheduleNotification(id: updated.id, body: updated.title, scheduledDate: updated.dueDate!);
+        // Schedule a new notification if the date is in the future
+        if (updated.dueDate != null && updated.dueDate!.isAfter(DateTime.now())) {
+          await LocalNotifications.scheduleNotification(
+            id: updated.id,
+            body: updated.title,
+            scheduledDate: updated.dueDate!,
+          );
+        }
       }
+      
+      // Update in database
+      await isar!.writeTxn(() => isar!.todos.put(updated));
+
+      // Refresh the list
+      await loadTodos();
+    } catch (e) {
+      // Re-throw with more context
+      throw Exception('Failed to update todo: $e');
     }
-    await isar!.writeTxn(() async => await isar!.todos.put(updated));
-    await loadTodos();
   }
 
-  void deleteTodo(int id) {
-    state = AsyncValue.data([
-      for (final todo in state.valueOrNull ?? [])
-        if (todo.id != id) todo,
-    ]);
-    LocalNotifications.cancelNotification(id);
-    isar!.writeTxn(() => isar!.todos.delete(id));
+  Future<void> deleteTodo(int id) async {
+    if (isar == null) return;
+
+    // Save the current state for rollback if needed
+    final previousState = state;
+
+    try {
+      // Optimistically update the UI
+      state = AsyncValue.data([
+        for (final todo in state.valueOrNull ?? [])
+          if (todo.id != id) todo,
+      ]);
+      
+      // Perform the database operation
+      await isar!.writeTxn(() => isar!.todos.delete(id));
+
+      // Cancel any associated notification
+      await LocalNotifications.cancelNotification(id);
+    } catch (e) {
+      // Rollback on error
+      state = previousState;
+      rethrow;
+    }
   }
 }

@@ -1,24 +1,46 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class AudioRecorderService {
   final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
   bool _isInitialized = false;
+  bool _isDisposed = false;
 
   Future<void> initialize() async {
+    if (_isDisposed) {
+      throw StateError('Cannot initialize a disposed AudioRecorderService');
+    }
     if (!_isInitialized) {
-      await _recorder.openRecorder();
-      _isInitialized = true;
+      try {
+        await _recorder.openRecorder();
+        _isInitialized = true;
+      } catch (e) {
+        _isInitialized = false;
+        rethrow;
+      }
     }
   }
 
   Future<void> dispose() async {
-    if (_isInitialized) {
-      await _recorder.closeRecorder();
-      _isInitialized = false;
+    if (_isDisposed) return;
+
+    try {
+      if (_isInitialized) {
+        if (_recorder.isRecording) {
+          await _recorder.stopRecorder();
+        }
+        await _recorder.closeRecorder();
+        _isInitialized = false;
+      }
+    } catch (e) {
+      // Log error but don't throw from dispose
+      debugPrint('Error disposing AudioRecorderService: $e');
+    } finally {
+      _isDisposed = true;
     }
   }
 
