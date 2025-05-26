@@ -1,4 +1,4 @@
-# ✅ TaskEcho – A Mobile AI-Powered Todo List App
+# ✅ TaskEcho – A Mobile, AI-Powered, Todo List App
 
 A modern, voice-enabled mobile To Do List app built with Flutter. Add tasks manually or speak them aloud and let AI turn them into structured to-dos. Powered by ISAR for fast local storage and includes local notifications on iOS.
 
