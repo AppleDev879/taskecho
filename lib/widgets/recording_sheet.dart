@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:http/http.dart' as http;
@@ -102,7 +103,7 @@ class _RecordingSheetState extends ConsumerState<RecordingSheet> with SingleTick
             contentType: MediaType('audio', 'm4a'),
           ),
         )
-        ..headers['Authorization'] = 'Bearer REMOVED'
+        ..headers['Authorization'] = 'Bearer ${dotenv.env['API_SECRET']}'
         ..fields['userDateTime'] = DateTime.now().toIso8601String();
 
       final streamedResponse = await request.send();
