@@ -77,6 +77,21 @@ class TodoNotifier extends StateNotifier<AsyncValue<List<Todo>>> {
 
   Future<void> updateTodo(Todo updated) async {
     if (isar == null) return;
+    final oldDate = updated.dueDate;
+
+    // Only proceed if the date actually changed
+    if (updated.dueDate != oldDate) {
+      // Update the model
+      updated.dueDate = updated.dueDate;
+
+      // Cancel any existing notification
+      LocalNotifications.cancelNotification(updated.id);
+
+      // Schedule a new notification if the date is not null
+      if (updated.dueDate != null && updated.dueDate!.isAfter(DateTime.now())) {
+        LocalNotifications.scheduleNotification(id: updated.id, body: updated.title, scheduledDate: updated.dueDate!);
+      }
+    }
     await isar!.writeTxn(() async => await isar!.todos.put(updated));
     await loadTodos();
   }
@@ -86,6 +101,7 @@ class TodoNotifier extends StateNotifier<AsyncValue<List<Todo>>> {
       for (final todo in state.valueOrNull ?? [])
         if (todo.id != id) todo,
     ]);
+    LocalNotifications.cancelNotification(id);
     isar!.writeTxn(() => isar!.todos.delete(id));
   }
 }

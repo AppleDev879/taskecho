@@ -52,27 +52,8 @@ class _TodoDetailScreenState extends ConsumerState<TodoDetailScreen> {
   }
 
   void _autoSaveDueDate(DateTime? newDate) {
-    final notifier = ref.read(todoListProvider.notifier);
-    final oldDate = widget.todo.dueDate;
-
-    // Only proceed if the date actually changed
-    if (newDate != oldDate) {
-      // Update the model
-      widget.todo.dueDate = newDate;
-      notifier.updateTodo(widget.todo);
-
-      // Cancel any existing notification
-      LocalNotifications.cancelNotification(widget.todo.id);
-
-      // Schedule a new notification if the date is not null
-      if (newDate != null && newDate.isAfter(DateTime.now())) {
-        LocalNotifications.scheduleNotification(
-          id: widget.todo.id,
-          body: widget.todo.title,
-          scheduledDate: newDate,
-        );
-      }
-    }
+    widget.todo.dueDate = newDate;
+    ref.read(todoListProvider.notifier).updateTodo(widget.todo);
   }
 
   void _toggleDueDate(bool value) {
