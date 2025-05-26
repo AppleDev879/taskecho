@@ -382,7 +382,7 @@ class _RecordingSheetState extends ConsumerState<RecordingSheet> with SingleTick
                           height: 120 * _waveAnimation.value,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Colors.redAccent.withOpacity(0.3),
+                            color: Colors.redAccent.withValues(alpha: 0.3),
                           ),
                         ),
                       ),
@@ -392,10 +392,10 @@ class _RecordingSheetState extends ConsumerState<RecordingSheet> with SingleTick
                       height: 80,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: _isRecording ? Colors.redAccent : Colors.redAccent[700],
+                        color: _isRecording ? Colors.redAccent : Colors.redAccent.withValues(alpha: 0.7),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
+                            color: Colors.black.withValues(alpha: 0.2),
                             blurRadius: 8,
                             offset: const Offset(0, 4),
                           ),

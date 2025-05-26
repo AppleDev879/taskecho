@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:interview_todos/models/todo.dart';
 import 'package:interview_todos/providers/todo_provider.dart';
-import 'package:interview_todos/services/local_notifications.dart';
-import 'package:interview_todos/utils/date_utils.dart' as date_utils;
 import 'package:interview_todos/utils/date_utils.dart';
 
 class TodoDetailScreen extends ConsumerStatefulWidget {
