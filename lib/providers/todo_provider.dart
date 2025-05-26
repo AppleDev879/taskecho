@@ -42,23 +42,27 @@ class TodoNotifier extends StateNotifier<AsyncValue<List<Todo>>> {
 
   Future<void> addTodosFromOpenAI({required List<OpenAIResponse> responses}) async {
     if (isar == null) return;
-    final todos = responses.map((response) {
-      final dueDate = DateTime.tryParse(response.dateTime);
-      final todo = Todo(
+    final todos = responses
+        .map(
+          (response) => Todo(
         title: response.title,
         description: response.description,
         isDone: false,
         category: response.category == 'personal' ? TodoCategory.personal : TodoCategory.work,
-        dueDate: dueDate,
-      );
-      if (dueDate != null) {
-        LocalNotifications.scheduleNotification(id: todo.id, body: todo.title, scheduledDate: dueDate);
-      }
-      return todo;
-    }).toList();
-    await isar!.writeTxn(() async {
-      await isar!.todos.putAll(todos);
+            dueDate: DateTime.tryParse(response.dateTime),
+          ),
+        )
+        .toList();
+
+    await isar!.writeTxn<List<Id>>(() async {
+      return isar!.todos.putAll(todos);
     });
+
+    final newTodosWithDueDates = todos.where((todo) => todo.dueDate != null).toList();
+
+    for (final todo in newTodosWithDueDates) {
+      LocalNotifications.scheduleNotification(id: todo.id, body: todo.title, scheduledDate: todo.dueDate!);
+    }
     await loadTodos();
   }
 

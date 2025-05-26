@@ -33,14 +33,14 @@ class LocalNotifications {
   }) async {
     await _notificationsPlugin.zonedSchedule(
       id,
-      "To-Do Reminder",
+      "EchoTask Reminder",
       body,
       tz.TZDateTime.from(scheduledDate, tz.local),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       const NotificationDetails(
         android: AndroidNotificationDetails(
-          'todo_channel',
-          'To-Do Notifications',
+          'echotask_channel',
+          'EchoTask',
           importance: Importance.max,
           priority: Priority.high,
         ),

@@ -1,10 +1,11 @@
 import 'package:cupertino_calendar_picker/cupertino_calendar_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:interview_todos/models/todo.dart';
+import 'package:interview_todos/providers/todo_provider.dart';
 import 'package:interview_todos/services/local_notifications.dart';
-
-import '../models/todo.dart';
-import '../providers/todo_provider.dart';
+import 'package:interview_todos/utils/date_utils.dart' as date_utils;
+import 'package:interview_todos/utils/date_utils.dart';
 
 class TodoDetailScreen extends ConsumerStatefulWidget {
   final Todo todo;
@@ -149,7 +150,7 @@ class _TodoDetailScreenState extends ConsumerState<TodoDetailScreen> {
                 absorbing: !widget.allowEditing,
                 child: CupertinoCalendarPickerButton(
                   initialDateTime: _validInitialDate,
-                  minimumDateTime: _validMinimumDate,
+                  minimumDateTime: DateTime(2000),
                   maximumDateTime: DateTime(2100),
                   mode: CupertinoCalendarMode.dateTime,
                   onCompleted: (date) {
@@ -170,19 +171,9 @@ class _TodoDetailScreenState extends ConsumerState<TodoDetailScreen> {
   }
 
   DateTime get _validInitialDate {
-    return _selectedDate ?? stripSeconds(DateTime.now().add(const Duration(minutes: 1)));
+    return _selectedDate ?? stripSeconds(DateTime.now().add(const Duration(minutes: 5)));
   }
 
-  DateTime get _validMinimumDate {
-    if (_selectedDate?.isBefore(DateTime.now()) == true) {
-      return _selectedDate!;
-    }
-    return stripSeconds(DateTime.now().add(const Duration(minutes: 1)));
-  }
-
-  DateTime stripSeconds(DateTime dt) {
-    return DateTime(dt.year, dt.month, dt.day, dt.hour, dt.minute);
-  }
 }
 
 extension StringCap on String {

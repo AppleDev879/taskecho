@@ -23,7 +23,7 @@ class MyApp extends ConsumerWidget {
     final currentTab = ref.watch(currentTabProvider);
 
     return MaterialApp(
-      title: 'To-Do List',
+      title: 'EchoTask',
       home: MainScreen(currentTab: currentTab),
     );
   }
