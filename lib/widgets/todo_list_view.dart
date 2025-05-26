@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:interview_todos/models/todo.dart';
@@ -118,8 +120,6 @@ class _TodoListViewState extends ConsumerState<TodoListView> {
         }
 
         final todo = filteredTodos[index];
-        final dueDate = dueDateString(todo);
-
         return Dismissible(
           key: Key(todo.id.toString()),
           background: Container(
@@ -141,13 +141,8 @@ class _TodoListViewState extends ConsumerState<TodoListView> {
                 color: todo.isDone ? Colors.grey : null,
               ),
             ),
-            subtitle: dueDate != null
-                ? Text(
-                    dueDate,
-                    style: textTheme.bodyMedium?.copyWith(
-                      color: todo.dueDate?.isBefore(DateTime.now()) == true && !todo.isDone ? Colors.red : null,
-                    ),
-                  )
+            subtitle: todo.dueDate != null
+                ? _DueDateText(dueDate: todo.dueDate, isDone: todo.isDone, textTheme: textTheme)
                 : null,
             trailing: IconButton(
               icon: const Icon(Icons.info_outline),
@@ -164,13 +159,64 @@ class _TodoListViewState extends ConsumerState<TodoListView> {
       },
     );
   }
+}
 
-  String? dueDateString(Todo todo) {
-    final dueDate = todo.dueDate;
-    if (dueDate == null) return null;
+/// A widget that displays the due date of a todo in red if it is overdue.
+class _DueDateText extends StatefulWidget {
+  final DateTime? dueDate;
+  final bool isDone;
+  final TextTheme textTheme;
+
+  const _DueDateText({required this.dueDate, required this.isDone, required this.textTheme});
+
+  @override
+  State<_DueDateText> createState() => _DueDateTextState();
+}
+
+class _DueDateTextState extends State<_DueDateText> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _scheduleNextUpdate();
+  }
+
+  void _scheduleNextUpdate() {
+    final now = DateTime.now();
+    final nextMinute = DateTime(now.year, now.month, now.day, now.hour, now.minute + 1);
+    final timeUntilNextMinute = nextMinute.difference(now);
+
+    // Wait until the start of the next minute
+    _timer = Timer(timeUntilNextMinute, () {
+      setState(() {});
+      // Then repeat every minute exactly
+      _timer = Timer.periodic(const Duration(minutes: 1), (_) {
+        setState(() {});
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.dueDate == null) return const SizedBox.shrink();
+
+    final isOverdue = widget.dueDate!.isBefore(DateTime.now()) && !widget.isDone;
+
+    return Text(dueDateString, style: widget.textTheme.bodyMedium?.copyWith(color: isOverdue ? Colors.red : null));
+  }
+
+  String get dueDateString {
+    if (widget.dueDate == null) return '';
 
     final now = DateTime.now();
-    final due = dueDate.toLocal();
+    final due = widget.dueDate!.toLocal();
 
     final today = DateTime(now.year, now.month, now.day);
     final dueDay = DateTime(due.year, due.month, due.day);
