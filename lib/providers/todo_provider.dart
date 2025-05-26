@@ -101,8 +101,10 @@ class TodoNotifier extends StateNotifier<AsyncValue<List<Todo>>> {
         return isar!.todos.putAll(todos);
       });
 
-      // Schedule notifications for todos with due dates
-      final newTodosWithDueDates = todos.where((todo) => todo.dueDate != null).toList();
+      // Schedule notifications for todos with due dates after now
+      final newTodosWithDueDates = todos
+          .where((todo) => todo.dueDate != null && todo.dueDate!.isAfter(DateTime.now()))
+          .toList();
       for (final todo in newTodosWithDueDates) {
         LocalNotifications.scheduleNotification(
           id: todo.id,
@@ -146,33 +148,44 @@ class TodoNotifier extends StateNotifier<AsyncValue<List<Todo>>> {
   /// If the todo's due date changes, any existing notification will be updated.
   ///
   /// Throws a [StateError] if the todo to update is not found in the current state.
-  Future<void> updateTodo(Todo updated) async {
+  Future<void> updateTodo(
+    Id id, {
+    String? title,
+    String? description,
+    bool? isDone,
+    TodoCategory? category,
+    DateTime? dueDate,
+  }) async {
     if (isar == null) return;
     
     // Find the existing todo to compare changes
-    final oldTodo = state.valueOrNull?.firstWhere(
-      (t) => t.id == updated.id,
+    final todo = state.valueOrNull?.firstWhere((t) => t.id == id,
       orElse: () => throw StateError('Todo not found'),
     );
+
+    todo?.category = category ?? todo.category;
+    todo?.description = description ?? todo.description;
+    todo?.isDone = isDone ?? todo.isDone;
+    todo?.title = title ?? todo.title;
     
     try {
       // Only proceed if the date actually changed
-      if (oldTodo != null && updated.dueDate != oldTodo.dueDate) {
+      if (todo != null && dueDate != todo.dueDate) {
+        // Update the due date
+        todo.dueDate = dueDate;
         // Cancel any existing notification for the old due date
-        await LocalNotifications.cancelNotification(updated.id);
+        await LocalNotifications.cancelNotification(id);
 
         // Schedule a new notification if the new date is in the future
-        if (updated.dueDate != null && updated.dueDate!.isAfter(DateTime.now())) {
+        if (dueDate != null && dueDate.isAfter(DateTime.now())) {
           await LocalNotifications.scheduleNotification(
-            id: updated.id, 
-            body: updated.title, 
-            scheduledDate: updated.dueDate!,
+            id: id, body: todo.title, scheduledDate: dueDate,
           );
         }
       }
       
       // Update the todo in the database
-      await isar!.writeTxn(() => isar!.todos.put(updated));
+      await isar!.writeTxn(() => isar!.todos.put(todo!));
       
       // Refresh the list to ensure UI consistency
       await loadTodos();

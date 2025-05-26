@@ -38,20 +38,20 @@ class _TodoDetailScreenState extends ConsumerState<TodoDetailScreen> {
     final trimmed = _titleController.text.trim();
     if (trimmed != widget.todo.title) {
       widget.todo.title = trimmed;
-      ref.read(todoListProvider.notifier).updateTodo(widget.todo);
+      ref.read(todoListProvider.notifier).updateTodo(widget.todo.id, title: trimmed);
     }
   }
 
   void _autoSaveCategory(TodoCategory category) {
     if (category != widget.todo.category) {
       widget.todo.category = category;
-      ref.read(todoListProvider.notifier).updateTodo(widget.todo);
+      ref.read(todoListProvider.notifier).updateTodo(widget.todo.id, category: category);
     }
   }
 
   void _autoSaveDueDate(DateTime? newDate) {
     widget.todo.dueDate = newDate;
-    ref.read(todoListProvider.notifier).updateTodo(widget.todo);
+    ref.read(todoListProvider.notifier).updateTodo(widget.todo.id, dueDate: newDate);
   }
 
   void _toggleDueDate(bool value) {
@@ -62,6 +62,13 @@ class _TodoDetailScreenState extends ConsumerState<TodoDetailScreen> {
     } else {
       _selectedDate = _validInitialDate;
       _autoSaveDueDate(_validInitialDate);
+    }
+  }
+
+  void _autoSaveDescription(String description) {
+    if (description != widget.todo.description) {
+      widget.todo.description = description;
+      ref.read(todoListProvider.notifier).updateTodo(widget.todo.id, description: description);
     }
   }
 
@@ -94,6 +101,7 @@ class _TodoDetailScreenState extends ConsumerState<TodoDetailScreen> {
             minLines: 4,
             maxLines: null,
             enabled: widget.allowEditing,
+            onChanged: _autoSaveDescription,
           ),
           const SizedBox(height: 16),
 
