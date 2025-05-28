@@ -11,7 +11,7 @@ A modern, voice-enabled mobile To Do List app built with Flutter. Add tasks manu
   - Title
   - Optional description
   - Optional due date
-  - Category (`personal`, `worker`, etc.)
+  - Category (`personal`, `work`, etc.)
 
 - **Categorized Viewing**  
   Tasks with due dates are sortable by category.
