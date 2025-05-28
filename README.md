@@ -35,7 +35,9 @@ A modern, voice-enabled mobile To Do List app built with Flutter. Add tasks manu
 
 ---
 
-## 🧠 Heads Up About Voice Input
+## 🧠 Voice Input Demo
+
+https://github.com/user-attachments/assets/5a886230-3387-4309-836c-63c26b70bfc5
 
 🔐 **You'll need a custom API key for my backend (not an OpenAI key) for transcription to work.**  
 If you're interested in trying that feature and don’t have the key, just ask me and I’ll get you set up!
